@@ -409,6 +409,65 @@ class BinaryEdge(object):
             params={'page': page}
         )
 
+    def domain_enumeration(self, domain, validate=0, total = None):
+        """
+        This endpoint attempts to enumerate subdomains from a larger dataset. 
+        
+        The validate flag can be used to have all subdomains resolved on the fly and only those with DNS entries behind them returned.
+
+        Args :
+            domain: [string] Domain you want to enumerate
+            
+            validate: [any] Optional. If validate=1, forces all subdomains to be resolved on request and only live 
+            subdomains to be returned Default: validate=0
+
+            total: [int] Optional. Return at most the number of results specified 
+            Default: undefined, return all results
+        
+        Returns : 
+            A dict created from the JSON returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned
+        """
+        args = {}
+        args["validate"] = validate
+        
+        if total:
+            args["total"] = total
+        
+        return self._get( f"query/domains/enumeration/{domain}", params = args )
+
+    def domain_homoglyphs(self, domain, validate=0, total = None):
+        """
+        This endpoint generates a list of homoglyphs for a base domain.
+        
+        The validate flag can be used to have all homoglyphs resolved on the fly and only those
+        with DNS entries behind them returned.
+
+        Args :
+            domain: [string] Domain you want to enumerate
+            
+            validate: [any] Optional. If validate=1, forces all subdomains to be resolved on request and only live 
+            subdomains to be returned Default: validate=0
+
+            total: [int] Optional. Return at most the number of results specified 
+            Default: undefined, return all results
+        
+        Returns : 
+            A dict created from the JSON returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned
+        """
+        args = {}
+        args["validate"] = validate
+        
+        if total:
+            args["total"] = total
+        
+        return self._get( f"query/domains/homoglyphs/{domain}", params = args )
+    
     def sensor_ip(self, target):
         """
         Details about an Scanner. List of recent events form the specified host,
