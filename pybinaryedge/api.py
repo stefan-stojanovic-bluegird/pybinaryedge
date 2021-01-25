@@ -409,6 +409,30 @@ class BinaryEdge(object):
             params={'page': page}
         )
 
+    def domain_search(self,query, page=1):
+        """
+        List of Domains/DNS data based on a Query. Can be used 
+        with specific parameters and/or full-text search. 
+        Possible types of records currently available:
+            >> A
+            >> AAAA
+            >> NS
+            >> MX
+            >> CNAME
+            >> TXT
+        
+        Args : 
+            query 
+            type : String
+
+            page
+            type : Integer
+            Default 1
+
+        """
+
+        return self._get("query/domains/search", params = { "query" : query, "page" : page })
+
     def domain_enumeration(self, domain, validate=0, total = None):
         """
         This endpoint attempts to enumerate subdomains from a larger dataset. 
