@@ -77,6 +77,14 @@ class BinaryEdge(object):
         except:
             raise ValueError('Invalid IP address')
 
+    def user(self):
+        """
+        User Information
+        Return details about your current subscription package.
+
+        https://docs.binaryedge.io/api-v2/#v2usersubscription
+        """
+        return self._get("user/subscription")
 
     def host(self, ip):
         """
@@ -220,6 +228,45 @@ class BinaryEdge(object):
             BinaryEdgeException: if anything else than 200 is returned by BE
         """
         return self._get('query/image/tags')
+
+    def torrent_search(self,query, page=1):
+        """
+        Events based on a Query. List of recent events for the given query, including details of the peer and torrent.
+        Can be used with specific parameters and/or full-text search.
+        https://docs.binaryedge.io/api-v2/#v2queryimagesearch
+
+        Args:
+            query: Search query in BinaryEdge
+            page: page number
+
+        Returns:
+            A dict created from the JSON returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned by BE
+        """
+        return self._get('query/torrent/search',params = { "query" : query, "page" : page })
+    
+    def torrent_search_stats(self, query, type, days = 90 , order = "desc"):
+        """
+        Statistics of events for the given query. 
+        Can be used with specific parameters and/or full-text search.
+
+        Args : 
+            query: Search query in BinaryEdge
+            type : Type of statistic we want to obtain. Possible types include:ports, countries, asn, ips, rdns, categories, names.
+            days: Optional. Number of days to get the stats for. For example, days=1 for the last day of data. Default 90. Max = 90
+            order: Optional. Whether to sort descendently or ascendently to get the top.Values can be asc, desc. Deafult desc.
+
+        Returns:
+            A dict created from the JSON returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned by BE
+        """
+        return self._get('query/torrent/search/stats', params = { "query" : query, "type" : type, "days" : days, "order" : order })
+
+
 
     def torrent_ip(self, ip):
         """
@@ -441,6 +488,23 @@ class BinaryEdge(object):
                     'days': days
                 }
         )
+
+    def sensor_tag(self, tag, days = 1):
+        """
+        Get a list of IPs that have been associated with a specific TAG. 
+        See List of Tags
+
+        Args
+            tag: [String] Tag you want to get the list of IPs related to. example: MALICIOUS
+            days: [Integer] : Number of days to get the stats for. For example days=1 for the last day of data. Default: 1. Max 60.
+        
+        Returns:
+            A list returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned by BE
+        """
+        return self._get("query/sensors/tag/" + tag, params={ "days" : days } )
 
     def stats(self, query, type, page=1):
         """
