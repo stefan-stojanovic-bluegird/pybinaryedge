@@ -138,7 +138,7 @@ class BinaryEdge(object):
         """
         return self._get('query/ip/historical/' + self._is_ip(ip))
 
-    def host_search(self, query, page=1):
+    def host_search(self, query, page=1, only_ips = 0):
         """
         Events based on a Query. List of recent events for the given query,
         including details of exposed ports and services. Can be used with
@@ -147,7 +147,7 @@ class BinaryEdge(object):
 
         Args:
             query: Search query in BinaryEdge
-            page: page number
+            page: page number (Optional, Max = 1000)
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -155,11 +155,11 @@ class BinaryEdge(object):
         Raises:
             BinaryEdgeException: if anything else than 200 is returned by BE
         """
-        return self._get('query/search', params={'query': query, 'page': page})
+        return self._get('query/search', params={'query': query, 'page': page, "only_ips" : only_ips})
 
     def host_score(self, ip):
         """
-        IP Scoring of an host. Scoring is based on all information found on
+        IP Risk Score. Scoring is based on all information found on
         our databases regarding an IP and refers to the level of exposure
         of a target, i.e, the higher the score, the greater the risk exposure
         https://docs.binaryedge.io/api-v2/#v2queryscoreiptarget
@@ -175,7 +175,7 @@ class BinaryEdge(object):
         """
         return self._get('query/score/ip/' + self._is_ip(ip))
 
-    def image_ip(self, ip):
+    def image_ip(self, ip, page=1):
         """
         Details about Remote Desktops found on an Host. List of screenshots
         and details extracted from them for the specified host, including OCR
@@ -184,6 +184,8 @@ class BinaryEdge(object):
 
         Args:
             ip: IPv4 address
+            page:  Results page number. Optional. 
+                Default page=1
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -191,7 +193,7 @@ class BinaryEdge(object):
         Raises:
             BinaryEdgeException: if anything else than 200 is returned by BE
         """
-        return self._get('query/image/ip/' + self._is_ip(ip))
+        return self._get('query/image/ip/' + self._is_ip(ip), params={ "page" : page })
 
     def image_search(self, query, page=1):
         """
@@ -203,7 +205,7 @@ class BinaryEdge(object):
 
         Args:
             query: Search query in BinaryEdge
-            page: page number
+            page: page number Max: page=750 (15,000 results) Default 1
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -329,7 +331,7 @@ class BinaryEdge(object):
         https://docs.binaryedge.io/api-v2/#v2querydataleaksorganizationdomain
 
         Args:
-            email: email address
+            domain: Verify which dataleaks affect the target domain.
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -339,10 +341,14 @@ class BinaryEdge(object):
         """
         return self._get('query/dataleaks/organization/' + domain)
 
-    def dataleaks_info(self):
+    def dataleaks_info(self,leak = None):
         """
         Get the list of dataleaks our platform keeps track.
         https://docs.binaryedge.io/api-v2/#v2querydataleaksinfo
+        
+        Args:
+            leak: Return information about a specific dataleak.
+                If not used will return all.
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -350,7 +356,12 @@ class BinaryEdge(object):
         Raises:
             BinaryEdgeException: if anything else than 200 is returned by BE
         """
-        return self._get('query/dataleaks/info')
+        args = {}
+        
+        if leak:
+            args["leak"] = leak
+        
+        return self._get('query/dataleaks/info', params = args)
 
     def domain_subdomains(self, domain, page=1):
         """
@@ -360,6 +371,7 @@ class BinaryEdge(object):
         Args:
             domain: domain queried
             page: page result (default is 1)
+                Max: page=500
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -380,6 +392,7 @@ class BinaryEdge(object):
         Args:
             domain: domain queried
             page: page result (default is 1)
+                Max = 500
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -397,6 +410,7 @@ class BinaryEdge(object):
         Args:
             IP: IP address queried
             page: page result (default is 1)
+                Max = 500
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -422,12 +436,15 @@ class BinaryEdge(object):
             >> TXT
         
         Args : 
-            query 
-            type : String
+            query: String used to query our data
+            page: Results page number Default 1
+                Max = 500
 
-            page
-            type : Integer
-            Default 1
+        Returns:
+            A dict created from the JSON returned by BinaryEdge
+
+        Raises:
+            BinaryEdgeException: if anything else than 200 is returned
 
         """
 
@@ -510,7 +527,7 @@ class BinaryEdge(object):
         """
         return self._get('query/sensors/ip/%s' % target)
 
-    def sensor_search(self, query, page=1):
+    def sensor_search(self, query, page=1, days = 30, only_ips = 0):
         """
         Events based on a Query. List of recent events for the given query,
         including details of scanned ports, payloads and tags. Can be used
@@ -518,10 +535,13 @@ class BinaryEdge(object):
         https://docs.binaryedge.io/api-v2/#v2querysensorssearch
 
         Args:
-            query: [String] String used to query our data. If no filters are
+            query: String used to query our data. If no filters are
                 used, it will perform a full-text search on the entire events
-            page: [Int] Optional. Default 1, Maximum: 500 (10,000 results)
-
+            page: Optional. Default 1, Maximum: 500 (10,000 results)
+            days: Optional. Number of days to get the stats for. For example, days=1 for the last day of data.
+                Default: days=30
+            only_ips: Optional. If only_ips=1, only output IP addresses, ports and protocols.
+                Default: only_ips=0
         Returns:
             A dict created from the JSON returned by BinaryEdge
 
@@ -533,10 +553,10 @@ class BinaryEdge(object):
         """
         return self._get(
                 'query/sensors/search',
-                params={'query': query, 'page': page}
+                params={'query': query, 'page': page, "only_ips" : only_ips, "days" : days}
         )
 
-    def sensor_search_stats(self, query, type, days=60):
+    def sensor_search_stats(self, query, type, days=60, order='desc'):
         """
         Statistics of events for the given query. Can be used with specific
         parameters and/or full-text search.
@@ -550,6 +570,8 @@ class BinaryEdge(object):
                 payloads, http_path.
             days: [Integer] Number of days to get the stats for.
                 For example days=1 for the last day of data.
+            order: [String] Optional. Whether to sort descendently or ascendently to get the top.
+                Values desc, asc. Default: order=desc
 
         Returns:
             A dict created from the JSON returned by BinaryEdge
@@ -568,7 +590,8 @@ class BinaryEdge(object):
                 params={
                     'query': query,
                     'type': type,
-                    'days': days
+                    'days': days,
+                    'order': order
                 }
         )
 
@@ -579,7 +602,8 @@ class BinaryEdge(object):
 
         Args
             tag: [String] Tag you want to get the list of IPs related to. example: MALICIOUS
-            days: [Integer] : Number of days to get the stats for. For example days=1 for the last day of data. Default: 1. Max 60.
+            days: [Integer] : Number of days to get the stats for. For example days=1 for the last day of data. 
+                Default: 1. Max 60.
         
         Returns:
             A list returned by BinaryEdge
@@ -589,7 +613,7 @@ class BinaryEdge(object):
         """
         return self._get("query/sensors/tag/" + tag, params={ "days" : days } )
 
-    def stats(self, query, type, page=1):
+    def stats(self, query, type, order = 'desc'):
         """
         Statistics of recent events for the given query. Can be used with
         specific parameters and/or full-text search.
@@ -599,8 +623,9 @@ class BinaryEdge(object):
             query: String used to query our data
             type: Type of statistic we want to obtain. Possible types include:
                 ports, products, versions, tags, services, countries, asn.
-            page: page result (default is 1)
-
+            order :  Whether to sort descendently or ascendently to get the top (Optional, default desc)
+                values can be desc,asc
+        
         Returns:
             A dict created from the JSON returned by BinaryEdge
 
@@ -615,6 +640,6 @@ class BinaryEdge(object):
             params={
                 'query': query,
                 'type': type,
-                'page': page
+                'order' : order
             }
         )
